@@ -1,0 +1,4 @@
+interface:
+  display_name: "Amazon 75-Character Title Optimizer"
+  short_description: "Rewrite and audit Amazon titles across product categories"
+  default_prompt: "Use $optimize-amazon-titles to rewrite and audit these Amazon listing titles within the applicable character limits."
