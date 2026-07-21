@@ -1,0 +1,4 @@
+interface:
+  display_name: "亚马逊 75 字符标题优化器"
+  short_description: "跨品类改写并审核亚马逊商品标题"
+  default_prompt: "使用 $optimize-amazon-titles-zh，按适用字符限制改写并审核这些亚马逊商品标题。"

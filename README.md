@@ -2,6 +2,11 @@
 
 [简体中文](README.zh-CN.md)
 
+This repository contains two installable packages:
+
+- `optimize-amazon-titles`: English instructions and interface
+- `optimize-amazon-titles-zh`: Simplified Chinese instructions and interface
+
 An open-source Codex skill for rewriting and auditing Amazon product titles across product categories.
 
 It combines category-aware title composition with deterministic validation for title length, Item Highlights length, duplicate words, restricted characters, required attributes, compatibility wording, promotional content, and evidence-sensitive claims.
@@ -58,6 +63,8 @@ cp -R ./optimize-amazon-titles ~/.codex/skills/optimize-amazon-titles
 ```
 
 Open a new Codex task if the skill does not appear immediately.
+
+To install the Simplified Chinese package instead, copy `optimize-amazon-titles-zh` to the skills directory and invoke `$optimize-amazon-titles-zh`.
 
 ## Use with Codex
 
@@ -130,4 +137,3 @@ Amazon policies and product-type schemas change. The skill stores a dated policy
 ## License
 
 [MIT](LICENSE)
-
