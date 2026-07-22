@@ -9,7 +9,7 @@
 - `optimize-amazon-titles`：英文指令与英文界面
 - `optimize-amazon-titles-zh`：中文指令与中文界面
 
-它把类目结构、关键词优先级、商品属性和确定性校验结合起来，检查标题与 Item Highlights 字符数、重复词、禁用字符、必要属性、兼容关系、促销语言和需要证据支持的声明。
+它把类目结构、关键词优先级、商品属性和确定性校验结合起来，检查标题与 Item Highlights 字符数、重复词、禁用字符、必要属性、兼容关系、促销语言和需要证据支持的声明。确定性语义检测以英文标题为主，非英文标题统一进入 `MANUAL_REVIEW`。
 
 > 本项目是独立的卖家运营工具，与 Amazon 不存在隶属、授权、赞助或背书关系。
 
@@ -34,26 +34,31 @@
 - 标记兼容性、父子变体、合规品类和声明证据风险
 - 同时统计 Unicode 字符数和 UTF-8 字节数
 - 输出 `READY`、`READY_WITH_WARNINGS` 或 `MANUAL_REVIEW`
+- 保留旧的 `PASS`、`PASS_WITH_WARNINGS` 和 `FAIL`，同时新增 v1.1 政策环境与风险代码
 
 Skill 默认只提供修改建议和审核结果，不会自动写回 Seller Central。
 
 ## 安装
 
-克隆仓库后，把中文版 `optimize-amazon-titles-zh` 文件夹复制到 Codex 全局 Skills 目录。
+克隆仓库后，可以把中英文两个包都复制到 Codex 全局 Skills 目录。
 
 Windows PowerShell：
 
 ```powershell
 Copy-Item -Recurse .\optimize-amazon-titles-zh "$HOME\.codex\skills\optimize-amazon-titles-zh"
+Copy-Item -Recurse .\optimize-amazon-titles "$HOME\.codex\skills\optimize-amazon-titles"
 ```
 
 macOS 或 Linux：
 
 ```bash
 cp -R ./optimize-amazon-titles-zh ~/.codex/skills/optimize-amazon-titles-zh
+cp -R ./optimize-amazon-titles ~/.codex/skills/optimize-amazon-titles
 ```
 
-如果没有立即出现在 Skill 列表中，请新建一个 Codex 任务后再调用。
+如果没有立即出现在 Skill 列表中，请新建一个 Codex 任务后再调用。两个包同时安装时，建议显式使用 `$optimize-amazon-titles` 或 `$optimize-amazon-titles-zh`。
+
+中文版提供中文操作指令和输出说明，并不等于完整的中文标题合规引擎。中文及其他非英文标题会执行长度与硬性字符校验，但仍必须进行人工语言审核。
 
 ## 使用方法
 
@@ -80,6 +85,10 @@ review_status 和 review_reason。
 python .\optimize-amazon-titles-zh\scripts\validate_titles.py `
   --title "RoadForge Front Wheel Bearing Hub, Compatible with Audi A1 2010-2019" `
   --brand "RoadForge" `
+  --marketplace "US" `
+  --locale "en_US" `
+  --product-type "AUTO_PART" `
+  --parentage-level "standalone" `
   --required "Wheel Bearing Hub" `
   --required "Audi A1" `
   --referenced-brand "Audi"
@@ -90,15 +99,22 @@ python .\optimize-amazon-titles-zh\scripts\validate_titles.py `
 ```powershell
 python .\optimize-amazon-titles-zh\scripts\validate_titles.py `
   --input .\examples\titles.csv `
-  --output .\title-audit.csv
+  --output .\title-audit.csv `
+  --fail-on-manual-review
 ```
+
+每条结果保留 `status`、`errors` 和 `warnings`，并新增 `schema_version`、`review_status`、`review_reasons`、`risk_codes` 和 `policy_context`。发布门禁以 `review_status` 为准。输入输出路径相同时默认拒绝覆盖，只有明确提供 `--allow-overwrite` 才会继续。
 
 ## 测试
 
 ```powershell
-python -m unittest discover .\optimize-amazon-titles-zh\scripts -p "test_*.py" -v
-python -m py_compile .\optimize-amazon-titles-zh\scripts\validate_titles.py
+python -m unittest discover .\tests -p "test_*.py" -v
+python .\scripts\sync_package_runtime.py --check
+python .\scripts\validate_eval_dataset.py
+python -m py_compile .\optimize-amazon-titles\scripts\validate_titles.py .\optimize-amazon-titles-zh\scripts\validate_titles.py
 ```
+
+共享测试目前包含 64 个唯一场景；改写质量评测集覆盖 10 个类目场景，并按字符合规、防误购属性保留、关键词取舍、声明证据和字段迁移五项评分。`scripts/export_blind_eval.py` 会物理移除隐藏评分字段供新鲜 Agent 测试，仓库级同步脚本保证两个安装包中的校验器字节一致。
 
 ## 规则更新
 

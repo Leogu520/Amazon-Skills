@@ -9,7 +9,7 @@ This repository contains two installable packages:
 
 An open-source Codex skill for rewriting and auditing Amazon product titles across product categories.
 
-It combines category-aware title composition with deterministic validation for title length, Item Highlights length, duplicate words, restricted characters, required attributes, compatibility wording, promotional content, and evidence-sensitive claims.
+It combines category-aware title composition with deterministic validation for title length, Item Highlights length, duplicate words, restricted characters, required attributes, compatibility wording, promotional content, and evidence-sensitive claims. Deterministic semantic detection is English-first; non-English titles always receive `MANUAL_REVIEW`.
 
 > This project is an independent seller operations tool. It is not affiliated with, endorsed by, or sponsored by Amazon.
 
@@ -29,6 +29,7 @@ This skill treats title optimization as an information-priority problem rather t
 - Flag compatibility, variation, regulated-product, and evidence risks
 - Validate both Unicode character count and UTF-8 byte length
 - Produce `READY`, `READY_WITH_WARNINGS`, or `MANUAL_REVIEW` recommendations
+- Preserve legacy `PASS`, `PASS_WITH_WARNINGS`, and `FAIL` output while adding v1.1 policy context and risk codes
 
 The skill intentionally does not publish changes to Seller Central.
 
@@ -48,23 +49,27 @@ The skill intentionally does not publish changes to Seller Central.
 
 ## Install
 
-Clone the repository, then copy the `optimize-amazon-titles` folder into your Codex skills directory.
+Clone the repository, then copy either or both package folders into your Codex skills directory.
 
 Windows PowerShell:
 
 ```powershell
 Copy-Item -Recurse .\optimize-amazon-titles "$HOME\.codex\skills\optimize-amazon-titles"
+Copy-Item -Recurse .\optimize-amazon-titles-zh "$HOME\.codex\skills\optimize-amazon-titles-zh"
 ```
 
 macOS or Linux:
 
 ```bash
 cp -R ./optimize-amazon-titles ~/.codex/skills/optimize-amazon-titles
+cp -R ./optimize-amazon-titles-zh ~/.codex/skills/optimize-amazon-titles-zh
 ```
 
 Open a new Codex task if the skill does not appear immediately.
 
-To install the Simplified Chinese package instead, copy `optimize-amazon-titles-zh` to the skills directory and invoke `$optimize-amazon-titles-zh`.
+Use `$optimize-amazon-titles` for the English interface or `$optimize-amazon-titles-zh` for the Simplified Chinese interface. Explicit invocation is recommended when both packages are installed.
+
+The Chinese package provides Chinese operating instructions and output guidance. It is not a complete Chinese-title compliance engine; Chinese and other non-English titles retain deterministic length and hard-character checks but always require human language review.
 
 ## Use with Codex
 
@@ -94,6 +99,10 @@ Single title:
 python optimize-amazon-titles/scripts/validate_titles.py \
   --title "RoadForge Front Wheel Bearing Hub, Compatible with Audi A1 2010-2019" \
   --brand "RoadForge" \
+  --marketplace "US" \
+  --locale "en_US" \
+  --product-type "AUTO_PART" \
+  --parentage-level "standalone" \
   --required "Wheel Bearing Hub" \
   --required "Audi A1" \
   --referenced-brand "Audi"
@@ -104,7 +113,8 @@ Batch CSV or JSON:
 ```bash
 python optimize-amazon-titles/scripts/validate_titles.py \
   --input examples/titles.csv \
-  --output title-audit.csv
+  --output title-audit.csv \
+  --fail-on-manual-review
 ```
 
 Input columns can include:
@@ -116,19 +126,26 @@ Input columns can include:
 | `item_highlights` | Proposed Item Highlights text |
 | `brand` | Brand name and restricted-character exception context |
 | `locale` | Locale such as `en_US` or `de_DE` |
+| `marketplace` | Marketplace alias or ID, such as `US`, `UK`, or `ATVPDKIKX0DER` |
+| `product_type` | Product Type used to establish schema and media context |
+| `parentage_level` | `standalone`, `parent`, or `child` |
 | `required_phrases` | Pipe-separated facts that must remain in Title |
-| `verified_claims` | Pipe-separated claim labels backed by evidence |
+| `verified_claims` | Pipe-separated exact claim IDs or documented aliases backed by evidence |
 | `referenced_brands` | Third-party brands used for compatibility |
-| `media_exempt` | `true` when a verified media exemption applies |
+| `media_exempt` | Legacy exemption request; Product Type and policy context still control the result |
+
+Each result preserves `status`, `errors`, and `warnings`, then adds `schema_version`, `review_status`, `review_reasons`, `risk_codes`, and `policy_context`. Use `review_status` as the release gate. `--fail-on-manual-review` makes batch or CI jobs exit nonzero for high-risk results. Input/output path collisions are rejected unless `--allow-overwrite` is explicit.
 
 ## Validation
 
 ```bash
-python -m unittest discover optimize-amazon-titles/scripts -p "test_*.py" -v
-python -m py_compile optimize-amazon-titles/scripts/validate_titles.py
+python -m unittest discover tests -p "test_*.py" -v
+python scripts/sync_package_runtime.py --check
+python scripts/validate_eval_dataset.py
+python -m py_compile optimize-amazon-titles/scripts/validate_titles.py optimize-amazon-titles-zh/scripts/validate_titles.py
 ```
 
-The test suite includes representative cases for consumer goods, electronics, automotive, industrial, beauty, apparel, baby, toys, media exemptions, compatibility wording, restricted characters, sensitive claims, and batch I/O.
+The shared suite currently contains 64 unique tests. The rewrite-quality dataset adds 10 category scenarios scored on character compliance, anti-misbuy attribute retention, keyword tradeoffs, claim evidence, and field migration. `scripts/export_blind_eval.py` physically removes held-out grading fields for fresh-agent testing, and `scripts/sync_package_runtime.py` keeps both installable validators byte-identical.
 
 ## Policy maintenance
 

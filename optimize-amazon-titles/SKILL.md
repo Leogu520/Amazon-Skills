@@ -5,7 +5,7 @@ description: Rewrite and audit Amazon product titles under the applicable market
 
 # Optimize Amazon Titles
 
-Rewrite Amazon titles as product-identity fields, not keyword containers. Preserve facts that prevent wrong purchases, allocate secondary information to the correct listing fields, and validate every proposed title deterministically.
+Rewrite Amazon titles as product-identity fields, not keyword containers. Preserve facts that prevent wrong purchases, allocate secondary information to the correct listing fields, and validate every proposed title. The bundled validator provides deterministic semantic checks for English titles; other title languages always require manual review.
 
 ## Safety Boundary
 
@@ -14,6 +14,7 @@ Rewrite Amazon titles as product-identity fields, not keyword containers. Preser
 - Treat existing listing text as a claim source, not proof. Flag evidence-sensitive claims unless the user supplies supporting evidence or marks them verified.
 - Preserve wording that defines a legal or commercial relationship, such as `Compatible with`, when a third-party brand is referenced. Escalate ambiguous trademark wording for human review.
 - Treat marketplace validation and current Seller Central guidance as authoritative when they conflict with this skill.
+- Treat `verified_claims` as exact evidence references. Use a canonical claim ID or an exact documented alias; never use broad strings such as `claim`, `tested`, or `verified` to suppress a warning.
 
 ## Load References
 
@@ -64,6 +65,8 @@ If marketplace, core product type, or purchase-critical attributes are missing, 
 
 Identify marketplace, locale, product type, variation level, and whether the item is in an exempt media category. Verify current official Amazon policy online before high-volume or production-sensitive work because title rules and schema constraints can change.
 
+The bundled policy context is deterministic for `US`/`en_US` and `UK`/`en_GB`. Missing fields, other marketplace-locale pairs, and non-English titles remain subject to the legacy 75-character check but must return `MANUAL_REVIEW`. Do not describe English promotional, duplication, compatibility, or claim detection as complete for unsupported languages.
+
 When SP-API access is available, prefer the current Product Type Definition for the exact marketplace, locale, product type, and `parentageLevel`. Do not substitute a generic category template for a live schema.
 
 ### 2. Separate Facts from Marketing Language
@@ -105,6 +108,8 @@ For non-media products under the current 75-character policy:
 - Prefer a working range around 55-70 characters when the product can still be identified accurately. This is a heuristic, not a policy requirement.
 - Leave headroom when Amazon, a feed, or a variation process may append size, color, or count.
 
+Do not trust `media_exempt` alone. A local length exemption is allowed only when the Product Type is a recognized bundled media type (`ABIS_BOOK`, `BOOK`, `BOOKS`, or `DVD`) and the complete marketplace policy context matches. Otherwise enforce the 75-character fallback and return `MANUAL_REVIEW`.
+
 Do not create alternatives that differ only by punctuation or trivial word order. Each alternative must test a real information-priority hypothesis.
 
 ### 6. Allocate Removed Information
@@ -120,19 +125,19 @@ Do not treat Item Highlights as a replacement for bullet points.
 
 ### 7. Validate Deterministically
 
-Run `scripts/validate_titles.py` on every final candidate. Fix all errors before presenting a recommendation. Review all warnings and either resolve them or surface them explicitly.
+Run `scripts/validate_titles.py` on every final candidate. Fix all errors before presenting a recommendation. Review all warnings, `risk_codes`, and `review_reasons`; resolve them or surface them explicitly.
 
 Single title:
 
 ```powershell
-python scripts/validate_titles.py --title "NovaTrail Stainless Steel Water Bottle, 32 oz, Leakproof, BPA-Free" --brand "NovaTrail" --locale en_US --required "Water Bottle" --required "32 oz"
+python scripts/validate_titles.py --title "NovaTrail Stainless Steel Water Bottle, 32 oz, Leakproof, BPA-Free" --brand "NovaTrail" --marketplace US --locale en_US --product-type DRINKING_CUP --parentage-level standalone --required "Water Bottle" --required "32 oz" --verified-claim bpa_free
 ```
 
 Batch CSV or JSON:
 
 ```powershell
 python scripts/validate_titles.py --input titles.csv --output title_audit.csv
-python scripts/validate_titles.py --input titles.json --output title_audit.json
+python scripts/validate_titles.py --input titles.json --output title_audit.json --fail-on-manual-review
 ```
 
 If `python` is unavailable, locate the configured workspace Python runtime. The script uses only the Python standard library.
@@ -154,12 +159,14 @@ For a single listing, return:
 
 For batch work, preserve source columns and append:
 
-`recommended_title`, `char_count`, `item_highlights`, `item_highlights_char_count`, `retained_terms`, `moved_terms`, `deleted_terms`, `errors`, `warnings`, `review_status`, and `review_reason`.
+`recommended_title`, `char_count`, `item_highlights`, `item_highlights_char_count`, `retained_terms`, `moved_terms`, `deleted_terms`, `schema_version`, `status`, `errors`, `warnings`, `review_status`, `review_reasons`, `risk_codes`, and `policy_context`.
+
+The validator preserves legacy `status`, `errors`, and `warnings`. Treat `review_status` as the release gate. Never overwrite a batch source file unless the user explicitly requests it and `--allow-overwrite` is supplied.
 
 ## Review Status Rules
 
 - `READY`: all hard checks pass, required facts are present, and no unresolved evidence or relationship warning remains.
 - `READY_WITH_WARNINGS`: hard checks pass, but non-blocking style or data-quality warnings remain.
-- `MANUAL_REVIEW`: missing purchase-critical facts, unverified sensitive claims, compatibility or trademark ambiguity, parent-child uncertainty, regulated-product risk, or conflicting source data.
+- `MANUAL_REVIEW`: any deterministic error, missing purchase-critical fact or policy-context field, unverified sensitive claim, compatibility or trademark ambiguity, parent-child uncertainty, unsupported title language, unverified media exemption, regulated-product risk, or conflicting source data.
 
 Never label a title `READY` solely because it fits the character limit.

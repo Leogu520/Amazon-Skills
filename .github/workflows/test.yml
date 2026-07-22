@@ -13,7 +13,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", "3.12"]
-        skill: ["optimize-amazon-titles", "optimize-amazon-titles-zh"]
 
     steps:
       - uses: actions/checkout@v4
@@ -21,6 +20,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Run unit tests
-        run: python -m unittest discover ${{ matrix.skill }}/scripts -p "test_*.py" -v
-      - name: Compile validator
-        run: python -m py_compile ${{ matrix.skill }}/scripts/validate_titles.py
+        run: python -m unittest discover tests -p "test_*.py" -v
+      - name: Check bilingual package parity
+        run: python scripts/sync_package_runtime.py --check
+      - name: Validate rewrite-quality dataset
+        run: python scripts/validate_eval_dataset.py
+      - name: Compile both validators
+        run: python -m py_compile optimize-amazon-titles/scripts/validate_titles.py optimize-amazon-titles-zh/scripts/validate_titles.py scripts/export_blind_eval.py scripts/sync_package_runtime.py scripts/validate_eval_dataset.py

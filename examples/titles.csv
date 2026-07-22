@@ -1,5 +1,4 @@
-sku,marketplace,locale,product_type,brand,title,item_highlights,required_phrases,verified_claims,referenced_brands,media_exempt
-HOME-001,US,en_US,DRINKING_CUP,NovaTrail,"NovaTrail Stainless Steel Water Bottle, 32 oz, Leakproof, BPA-Free","Double-wall insulation for gym, office, and travel.","Water Bottle|32 oz",BPA-free,,false
-AUTO-001,US,en_US,AUTO_PART,RoadForge,"RoadForge Front Wheel Bearing Hub for Audi A1 2010-2019",,"Wheel Bearing Hub|Audi A1",,Audi,false
-LONG-001,US,en_US,PRODUCT,Example,"This intentionally overlong Amazon product title contains too many words and must fail the seventy five character validation rule",,,,,false
-
+sku,marketplace,locale,product_type,parentage_level,brand,title,item_highlights,required_phrases,verified_claims,referenced_brands,media_exempt
+HOME-001,US,en_US,DRINKING_CUP,standalone,NovaTrail,"NovaTrail Stainless Steel Water Bottle, 32 oz, Leakproof, BPA-Free","Double-wall insulation for gym, office, and travel.","Water Bottle|32 oz",bpa_free,,false
+AUTO-001,US,en_US,AUTO_PART,standalone,RoadForge,"RoadForge Front Wheel Bearing Hub, Compatible with Audi A1, 2010-2019",,"Wheel Bearing Hub|Audi A1|2010-2019",,Audi,false
+LONG-001,US,en_US,PRODUCT,standalone,Example,"This intentionally overlong Amazon product title contains too many words and must fail the seventy five character validation rule",,,,,false

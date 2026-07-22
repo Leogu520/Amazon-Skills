@@ -17,6 +17,12 @@
 
 必须有明确的证据边界，例如测试报告、认证范围、包装声明、受控产品规格或用户明确确认。不得从竞品 Listing 推断证据。
 
+调用内置校验器时，必须提供精确的规范化声明 ID 或精确别名。支持的规范化 ID 为：
+
+`bpa_free`、`non_toxic`、`food_safe`、`child_safe`、`waterproof`、`organic`、`hypoallergenic`、`clinical`、`medical_approval`、`environmental`、`antimicrobial`、`fire_performance`、`age_life_stage`、`certification_compliance`、`educational_positioning` 和 `performance_duration`。
+
+校验器会规范化大小写、空格和标点，但不会做子字符串匹配。`claim` 之类的泛化值不能验证 `waterproof`。
+
 ## 兼容关系和商标措辞
 
 - 当第三方产品与被引用品牌的自有产品需要区分时，保留 `Compatible with`、`Fits`、`Replacement for` 或同等关系短语。
@@ -63,3 +69,4 @@
 - 保留当地标准单位、数字格式和产品术语。
 - 同时统计 Unicode Code Point 和 UTF-8 字节。
 - 机器翻译的兼容、安全、年龄和法规术语必须人工审核。
+- 当前确定性语义模式以英文为主。其他标题语言保留长度和硬性字符结果，同时增加 `UNSUPPORTED_TITLE_LANGUAGE` 并使用 `MANUAL_REVIEW`。

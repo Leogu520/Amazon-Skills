@@ -4,6 +4,8 @@
 
 本文件仅作为政策基线，不能替代目标站点当前帮助页面或 Product Type Definition Schema。
 
+内置校验器基线：`US`/`en_US` 和 `UK`/`en_GB`。这些环境仍必须提供 `marketplace`、`locale`、`product_type` 和 `parentage_level`。其他环境继续执行 75/125 字符后备检查，但在核验目标站点当前 Schema 前统一返回 `MANUAL_REVIEW`。
+
 ## 当前基线
 
 - 从 2026 年 7 月 27 日起，除媒介类目外，所有类目的商品标题不得超过 75 个字符，空格计入。
@@ -64,3 +66,7 @@
 不要承诺 Item Highlights 与 Title 具有相同的排名权重。亚马逊只说明二者可搜索，并未公布相同字段权重。
 
 内置校验器统计 Unicode Code Point 和 UTF-8 字节。重复词检测主要适用于空格分词语言。最终接收结果以 Seller Central 和当前 Product Type Schema 为准，尤其是 CJK 文本、组合字符和站点特定分词。
+
+校验器的完整促销词、重复词、兼容关系和证据声明模式以英文为主。非英文标题只执行长度和硬性字符检查，并增加 `UNSUPPORTED_TITLE_LANGUAGE`；不得把结果描述为完整审核。
+
+`media_exempt` 不是豁免证据。内置校验器只对完整匹配政策环境中的 `ABIS_BOOK`、`BOOK`、`BOOKS` 或 `DVD` Product Type 应用本地豁免。其他豁免请求继续执行 75 字符后备检查并转人工审核。

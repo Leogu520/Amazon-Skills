@@ -4,6 +4,8 @@ Last verified: 2026-07-21
 
 Use this file as a policy baseline, not as a substitute for the current marketplace help page or Product Type Definition schema.
 
+Bundled validator baseline: `US`/`en_US` and `UK`/`en_GB`. These contexts still require `marketplace`, `locale`, `product_type`, and `parentage_level`. Other contexts retain the 75/125 fallback checks but return `MANUAL_REVIEW` until the current target schema is verified.
+
 ## Current Baseline
 
 - Starting July 27, 2026, product titles in all categories except media must be 75 characters or fewer, including spaces.
@@ -64,3 +66,7 @@ Re-verify official sources when any of these are true:
 Do not promise that Item Highlights and Title have identical ranking weight. Amazon states that both are searchable but does not publish equivalent field weighting.
 
 The bundled validator counts Unicode code points and UTF-8 bytes. Repeated-word detection is best-effort for space-delimited languages. Seller Central and the current product-type schema remain authoritative for final acceptance, especially for CJK text, combining characters, and marketplace-specific tokenization.
+
+The validator's full promotional, repeated-word, compatibility, and evidence-claim patterns are English-first. Non-English titles receive length and hard-character checks plus `UNSUPPORTED_TITLE_LANGUAGE`; they must not be described as fully audited.
+
+`media_exempt` is not proof. The bundled validator applies a local exemption only for recognized `ABIS_BOOK`, `BOOK`, `BOOKS`, or `DVD` Product Types in a complete matching policy context. All other exemption requests remain subject to the 75-character fallback and manual review.

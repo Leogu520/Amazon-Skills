@@ -17,6 +17,12 @@ Examples include:
 
 Require a supplied evidence boundary such as a test report, certification scope, packaging statement, controlled product specification, or explicit user confirmation. Do not infer evidence from competitor listings.
 
+For the bundled validator, supply an exact canonical claim ID or exact alias. Supported canonical IDs are:
+
+`bpa_free`, `non_toxic`, `food_safe`, `child_safe`, `waterproof`, `organic`, `hypoallergenic`, `clinical`, `medical_approval`, `environmental`, `antimicrobial`, `fire_performance`, `age_life_stage`, `certification_compliance`, `educational_positioning`, and `performance_duration`.
+
+The validator normalizes case, spaces, and punctuation, but it does not use substring matching. A generic value such as `claim` cannot verify `waterproof`.
+
 ## Compatibility and Trademark Wording
 
 - Preserve `Compatible with`, `Fits`, `Replacement for`, or an equivalent relationship phrase when it distinguishes a third-party product from the referenced brand's own product.
@@ -63,4 +69,4 @@ The title can affect how a product is classified. A shorter title must not erase
 - Preserve units, decimal conventions, and standard local product terminology.
 - Count both Unicode code points and UTF-8 bytes.
 - Treat machine translation of compatibility, safety, age, and regulatory terms as manual-review content.
-
+- The current deterministic semantic patterns are English-first. For any other title language, retain length and hard-character results, add `UNSUPPORTED_TITLE_LANGUAGE`, and use `MANUAL_REVIEW`.
